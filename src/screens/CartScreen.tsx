@@ -14,7 +14,6 @@ export default function Cart() {
   const handleDeleteItem = async (itemId:any) => {
     try {
       await deleteCartitem(itemId);
-      alert('remove success')
     } catch (error) {
     }
   };

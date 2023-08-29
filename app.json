@@ -21,7 +21,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.v2kid.shopingapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -31,6 +32,12 @@
       "eas": {
         "projectId": "c0dc1c23-e9be-49ea-885c-7ee3db5e4c32"
       }
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/c0dc1c23-e9be-49ea-885c-7ee3db5e4c32"
     }
   },
   "name": "shopping-app"

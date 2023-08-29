@@ -6,8 +6,12 @@ export const productApi = createApi({
   tagTypes: ['Cart'],
   baseQuery: fetchBaseQuery({ baseUrl: 'https://jsonserver-zeta.vercel.app/' }),
   endpoints: (builder) => ({
-    getProducts: builder.query<Product[], string>({
-      query: (categories) => `products?categories=${categories}`,
+    getProducts: builder.query<Product[], { categories: string , page : number, perpage : number }>({
+      query: ({ categories, page, perpage }) => {
+        const start = (page - 1) * perpage;
+        const end = (page * perpage) ;
+        return `products?_start=${start}&_end=${end}&categories=${categories}`;
+      },
     }),
     getDetials: builder.query<Product, string>({
       query: (id) => `products/${id}`,

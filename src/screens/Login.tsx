@@ -1,29 +1,33 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { FIREBASE_AUTH } from '../../FirebaseConfig';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-
-
-
+import { createUserWithEmailAndPassword, Persistence, signInWithEmailAndPassword, getAuth } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch, useSelector } from 'react-redux';
+import {  loggin } from '../store/Appslice'
 
 const Login = ({ navigation } : any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading , setLoading] = useState(false)
   const auth =  FIREBASE_AUTH
+  // const login = useSelector((state : RootState)=> state.login.loggedIn)
+  const dispatch = useDispatch()
 
   const signIn = async () => {
-        setLoading(true)
         try {
-            const  response = await signInWithEmailAndPassword(auth,email,password)
-            console.log(response)
-            alert('check your email')
+           await signInWithEmailAndPassword(auth,email,password)
+           dispatch(loggin(email))
+            auth.onAuthStateChanged(user => {
+              if (user) {
+                AsyncStorage.setItem('userData', JSON.stringify({ token: user.getIdToken, email: user.email }));
+              } else {
+                AsyncStorage.removeItem('userData');
+              }
+            });
             navigation.navigate('TabsStack');
         }catch (error) {
             console.log(error)
-            alert('sign in failed' + error)
-        }finally {
-            setLoading(false)
         }
   };
 
@@ -32,10 +36,8 @@ const Login = ({ navigation } : any) => {
     try{
         const response = await createUserWithEmailAndPassword(auth,email,password)
         console.log(response)
-        alert('success signup')
     }catch(error) {
         console.log(error)
-        alert('failed')
     }finally{
         setLoading(false)
     }
@@ -59,6 +61,7 @@ const Login = ({ navigation } : any) => {
       <>
        <TouchableOpacity style={styles.button} onPress={signIn}>
         <Text style={styles.buttonText}>Login</Text>
+        <Text style={styles.buttonText}>{}</Text>
       </TouchableOpacity> 
       <TouchableOpacity style={styles.button} onPress={signUp}>
         <Text style={styles.buttonText}>SignUp</Text>

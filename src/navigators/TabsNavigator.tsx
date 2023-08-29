@@ -12,6 +12,8 @@ import CustomBottomTabs from "../components/CustomBottomTabs";
 import Favorite from "../screens/Favorite";
 import Cart from "../screens/CartScreen";
 import Splash from "../components/Splash";
+import Profile from "../screens/Profile";
+import TestScreen from "../screens/TestScreen";
 
 export type TabsStackParamList = {
   Home: undefined;
@@ -56,7 +58,7 @@ const TabsNavigator = () => {
       />
       <TabsStack.Screen
         name="Payment"
-        component={Example}
+        component={TestScreen}
         options={{
           tabBarIcon(props) {
             return <Icons name="account-balance-wallet" {...props} />;
@@ -65,7 +67,7 @@ const TabsNavigator = () => {
       />
       <TabsStack.Screen
         name="Profile"
-        component={Example}
+        component={Profile}
         options={{
           tabBarIcon(props) {
             return <Icons name="person" {...props} />;

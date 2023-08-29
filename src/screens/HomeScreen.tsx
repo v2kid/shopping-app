@@ -7,7 +7,7 @@ import {
   StyleSheet,
   FlatList,
 } from "react-native";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@react-navigation/native";
 import Icons from "@expo/vector-icons/MaterialIcons";
@@ -17,14 +17,16 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import CustomBackdrop from "../components/CustomBackdrop";
 import { TabsStackScreenProps } from "../navigators/TabsNavigator";
 import Card from "../components/Card";
-import { useAddtocartMutation, useGetProductsQuery } from "../store/App.service";
+import {
+  useAddtocartMutation,
+  useGetProductsQuery,
+} from "../store/App.service";
+import { FIREBASE_AUTH } from "../../FirebaseConfig";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useSelector } from "react-redux";
+import { RootState } from "../store/store";
 
-const CATEGORIES = [
-  "Cloth",
-  "Shoes",
-  "Hat",
-  "Jewelry",
-];
+const CATEGORIES = ["Cloth", "Shoes", "Hat", "Jewelry"];
 
 const AVATAR_URL =
   "https://images.unsplash.com/photo-1496345875659-11f7dd282d1d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2340&q=80";
@@ -63,20 +65,32 @@ const MESONARY_LIST_DATA = [
 ];
 
 const HomeScreen = ({ navigation }: TabsStackScreenProps<"Home">) => {
-  const [addCart, addCartResult] = useAddtocartMutation()
+  const [addCart, addCartResult] = useAddtocartMutation();
   const { colors } = useTheme();
-  const [categoryIndex, setCategoryIndex] = useState('Cloth');
+  const [categoryIndex, setCategoryIndex] = useState("Cloth");
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const {data} = useGetProductsQuery(categoryIndex)
-  
+  const [page, setPage] = useState(1);
+  const { data, isLoading, isFetching } = useGetProductsQuery({
+    categories: categoryIndex,
+    page: page,
+    perpage: 5,
+  });
+  const loadMoreData = () => {
+    if (!isLoading && !isFetching) {
+      setPage(page + 1);
+      console.log("aaaa");
+    }
+  };
   const openFilterModal = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
   const handleAddToCart = async (item: any) => {
-      const response = await addCart(item).unwrap().
-      then((payload: any) => console.log('fulfilled', payload))
-  return response;
+    const response = await addCart(item)
+      .unwrap()
+      .then((payload: any) => console.log("fulfilled", payload));
+    return response;
   };
+  const user = useSelector((State: RootState) => State.login.user.email);
   return (
     <ScrollView>
       <SafeAreaView style={{ paddingVertical: 24, gap: 24 }}>
@@ -106,7 +120,7 @@ const HomeScreen = ({ navigation }: TabsStackScreenProps<"Home">) => {
               }}
               numberOfLines={1}
             >
-              Hi, James 👋
+              Hi, {user} 👋
             </Text>
             <Text
               style={{ color: colors.text, opacity: 0.75 }}
@@ -133,7 +147,7 @@ const HomeScreen = ({ navigation }: TabsStackScreenProps<"Home">) => {
         {/* Search Bar Section */}
         <View style={{ flexDirection: "row", paddingHorizontal: 24, gap: 12 }}>
           <TouchableOpacity
-          onPress={()=>navigation.navigate('SearchScreen')}
+            onPress={() => navigation.navigate("SearchScreen")}
             style={{
               flex: 1,
               height: 52,
@@ -271,108 +285,115 @@ const HomeScreen = ({ navigation }: TabsStackScreenProps<"Home">) => {
         />
 
         {/* Mesonary */}
-      <View>
-      {data && <MasonryList
-          data={data}
-          numColumns={2}
-          contentContainerStyle={{ paddingHorizontal: 12 }}
-          showsVerticalScrollIndicator={false}
-          renderItem={({item,i} : any) => (
-            <View style={{ padding: 6 }}>
-              <View
-                style={{
-                  aspectRatio: i === 0 ? 1 : 2 / 3,
-                  position: "relative",
-                  overflow: "hidden",
-                  borderRadius: 24,
-                }}
-              >
-                <Image
-                  source={{
-                    uri: item.imageUrl,
-                  }}
-                  resizeMode="cover"
-                  style={StyleSheet.absoluteFill}
-                />
-                <View
-                  style={[
-                    StyleSheet.absoluteFill,
-                    {
-                      padding: 12,
-                    },
-                  ]}
-                >
-                    <TouchableOpacity onPress={() => {
-                navigation.navigate("Details", {
-                  id: item.id,
-                });
-              }} >
-                  <View style={{ flexDirection: "row", gap: 8, padding: 4 }}>
-                  <Text
-                      style={{
-                        flex: 1,
-                        fontSize: 16,
-                        fontWeight: "600",
-                        color: "#fff",
-                        textShadowColor: "rgba(0,0,0,0.2)",
-                        textShadowOffset: {
-                          height: 1,
-                          width: 0,
-                        },
-                        textShadowRadius: 4,
-                      }}
-                    >
-                      {item.title}
-                    </Text>
-                  
-                  </View>
-                  </TouchableOpacity>
-                  <View style={{ flex: 1 }} />
-                  <BlurView
+        <View>
+          {data && (
+            <MasonryList
+              data={data}
+              numColumns={2}
+              contentContainerStyle={{ paddingHorizontal: 12 }}
+              showsVerticalScrollIndicator={false}
+              onEndReached={loadMoreData}
+              onEndReachedThreshold={0.5}
+              renderItem={({ item, i }: any) => (
+                <View style={{ padding: 6 }}>
+                  <View
                     style={{
-                      flexDirection: "row",
-                      backgroundColor: "rgba(0,0,0,0.5)",
-                      alignItems: "center",
-                      padding: 6,
-                      borderRadius: 100,
+                      aspectRatio: i === 0 ? 1 : 2 / 3,
+                      position: "relative",
                       overflow: "hidden",
+                      borderRadius: 24,
                     }}
-                    intensity={20}
                   >
-                    <Text
-                      style={{
-                        flex: 1,
-                        fontSize: 16,
-                        fontWeight: "600",
-                        color: "#fff",
-                        marginLeft: 8,
+                    <Image
+                      source={{
+                        uri: item.imageUrl,
                       }}
-                      numberOfLines={1}
+                      resizeMode="cover"
+                      style={StyleSheet.absoluteFill}
+                    />
+                    <View
+                      style={[
+                        StyleSheet.absoluteFill,
+                        {
+                          padding: 12,
+                        },
+                      ]}
                     >
-                      ${item.price}
-                    </Text>
-                    <TouchableOpacity
-                      style={{
-                        paddingHorizontal: 12,
-                        paddingVertical: 8,
-                        borderRadius: 100,
-                        backgroundColor: "#fff",
-                      }}
-                      onPress={()=>handleAddToCart(item)}
-                    >
-                      <Icons name="add-shopping-cart" size={18} color="#000" />
-                    </TouchableOpacity>
-                  </BlurView>
+                      <TouchableOpacity
+                        onPress={() => {
+                          navigation.navigate("Details", {
+                            id: item.id,
+                          });
+                        }}
+                      >
+                        <View
+                          style={{ flexDirection: "row", gap: 8, padding: 4 }}
+                        >
+                          <Text
+                            style={{
+                              flex: 1,
+                              fontSize: 16,
+                              fontWeight: "600",
+                              color: "#fff",
+                              textShadowColor: "rgba(0,0,0,0.2)",
+                              textShadowOffset: {
+                                height: 1,
+                                width: 0,
+                              },
+                              textShadowRadius: 4,
+                            }}
+                          >
+                            {item.title}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                      <View style={{ flex: 1 }} />
+                      <BlurView
+                        style={{
+                          flexDirection: "row",
+                          backgroundColor: "rgba(0,0,0,0.5)",
+                          alignItems: "center",
+                          padding: 6,
+                          borderRadius: 100,
+                          overflow: "hidden",
+                        }}
+                        intensity={20}
+                      >
+                        <Text
+                          style={{
+                            flex: 1,
+                            fontSize: 16,
+                            fontWeight: "600",
+                            color: "#fff",
+                            marginLeft: 8,
+                          }}
+                          numberOfLines={1}
+                        >
+                          ${item.price}
+                        </Text>
+                        <TouchableOpacity
+                          style={{
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 100,
+                            backgroundColor: "#fff",
+                          }}
+                          onPress={() => handleAddToCart(item)}
+                        >
+                          <Icons
+                            name="add-shopping-cart"
+                            size={18}
+                            color="#000"
+                          />
+                        </TouchableOpacity>
+                      </BlurView>
+                    </View>
+                  </View>
                 </View>
-              </View>
-            </View>
+              )}
+            />
           )}
-          
-          onEndReachedThreshold={0.1}
-        />}
-      
-      </View>
-       
+        </View>
       </SafeAreaView>
 
       <BottomSheetModal

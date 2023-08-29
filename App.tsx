@@ -7,16 +7,27 @@ import {
   Theme,
 } from "@react-navigation/native";
 import RootNavigator from "./src/navigators/RootNavigator";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import "react-native-gesture-handler";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { Provider } from "react-redux";
 import { store } from "./src/store/store";
+import { FIREBASE_AUTH } from "./FirebaseConfig";
 
 export default function App() {
+  const auth =  FIREBASE_AUTH
+  // useEffect(()=>{
+  //   if(auth.currentUser !== null){
+  //     console.log(auth.currentUser.email, ' dc r')
+  //   }
+  //   else{
+  //     console.log('code sai')
+  //   }
+  // })
 
+ 
   const colorScheme = useColorScheme();
 
   const theme: Theme = useMemo(

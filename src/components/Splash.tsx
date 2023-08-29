@@ -1,12 +1,26 @@
-import React from 'react'
-import { StyleSheet, Text, View,StatusBar,Image } from 'react-native'
+import React, { useEffect } from 'react'
+import {View,Image } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDispatch } from 'react-redux';
+import { loggin } from '../store/Appslice';
 
 
 const Splash = ({navigation} : any) => {
-
-    setTimeout(()=>{
-        navigation.navigate('Login')
-    },1000)
+    const dispatch = useDispatch()
+    useEffect(()=>{
+        setTimeout(()=>{
+            AsyncStorage.getItem('userData').then( userData => {
+                if (userData) {
+                  const parsedUserData = JSON.parse(userData);
+                   dispatch(loggin(parsedUserData))
+                  console.log(parsedUserData)
+                  navigation.navigate('TabsStack')
+                } else {
+                    navigation.navigate('Login')
+                }
+              });
+        },1000)
+    })
     return (
         <View style={{ 
             position : 'absolute',

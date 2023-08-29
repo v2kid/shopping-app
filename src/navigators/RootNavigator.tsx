@@ -30,10 +30,10 @@ const RootNavigator = () => {
   return (
   
     <RootStack.Navigator>
-     {/* <RootStack.Screen name="Splash" component={Splash} options={{
+     <RootStack.Screen name="Splash" component={Splash} options={{
       headerShown : false
-     }}/> */}
-     {/* <RootStack.Screen name="Login" component={Login}/> */}
+     }}/>
+     <RootStack.Screen name="Login" component={Login}/>
       <RootStack.Screen
         name="TabsStack"
         component={TabsNavigator}
